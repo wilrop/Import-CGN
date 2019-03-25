@@ -8,6 +8,7 @@ import pandas as pd     # Pandas is used to construct the CSV file
 
 # Global variable specifying the maximum accepted length of a speech file
 MAX_SECS = 10
+FILENAME_ALL = "all_data.csv"
 
 
 # This function will preprocess the data given a target (the top level directory of CGN)
@@ -83,7 +84,9 @@ def process_component(audio_path, trans_path):
 def process_language(audio_path, trans_path):
     files = os.listdir(audio_path)
     accepted = 0
-    accepted_list = []
+    accepted_wavs = []
+    accepted_wav_sizes = []
+    accepted_wav_transcripts = []
     rejected = 0
 
     # Check all speech files for validity
@@ -100,12 +103,25 @@ def process_language(audio_path, trans_path):
             rejected += 1
         else:
             accepted +=1
-            accepted_list.append(file)
+            accepted_wavs.append(final_path)
+            file_size = os.path.getsize(final_path)
+            accepted_wav_sizes = file_size
+            accepted_wav_transcripts = "test"
+
+    processed_data = {
+        'wav_filename': accepted_wavs,
+        'wav_filesize': accepted_wav_sizes,
+        'transcript': accepted_wav_transcripts
+    }
+
+    df = pd.DataFrame(processed_data, columns=['wav_filename', 'wav_filesize', 'transcript'])
+    with open(FILENAME_ALL, 'a') as f:
+        df.to_csv(f, sep=',', mode='a', header=f.tell() == 0, index=False, encoding="ascii")
 
     print("Number of rejected files: " + str(rejected))
     print("Number of accepted files: " + str(accepted))
     print("Accepted files:")
-    print(accepted_list)
+    print(accepted_wavs)
 
 
 if __name__ == "__main__":
