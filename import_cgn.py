@@ -5,6 +5,8 @@ from os import path
 import argparse         # This module is used to pass optional flags to the importer
 import soundfile as sf  # This module is used to calculate the length of the sound files
 import pandas as pd     # Pandas is used to construct the CSV file
+import xml.etree.ElementTree as ET      # This is used to parse the XML file with the transcriptions
+import gzip          # This is used to extract the transcriptions if they are still zipped
 
 # Global variable specifying the maximum accepted length of a speech file
 MAX_SECS = 10
@@ -26,7 +28,7 @@ def preprocess_data(args):
 
     # Go to the audio and transcription directories
     audio_path = path.join(target, "data/audio/wav")
-    trans_path = path.join(target, "data/annot/text/ort")
+    trans_path = path.join(target, "data/annot/xml/skp-ort")
 
     # Check if the user chose a specific component
     if args.component:
@@ -53,6 +55,7 @@ def preprocess_data(args):
                 print("---------------------------------------------------------")
 
 
+# This function takes care of one component of the data
 def process_component(audio_path, trans_path):
     lang = args.language
     # If flemish is selected we will enter this
@@ -81,6 +84,7 @@ def process_component(audio_path, trans_path):
         print("The provided language was invalid")
 
 
+# This function processes one language each time it gets called
 def process_language(audio_path, trans_path):
     files = os.listdir(audio_path)
     accepted = 0
@@ -105,8 +109,9 @@ def process_language(audio_path, trans_path):
             accepted +=1
             accepted_wavs.append(final_path)
             file_size = os.path.getsize(final_path)
-            accepted_wav_sizes = file_size
-            accepted_wav_transcripts = "test"
+            accepted_wav_sizes.append(file_size)
+            transcript = get_transcription(file, trans_path)  # The function returns the transcription for the .wav file
+            accepted_wav_transcripts.append(transcript)
 
     processed_data = {
         'wav_filename': accepted_wavs,
@@ -114,14 +119,51 @@ def process_language(audio_path, trans_path):
         'transcript': accepted_wav_transcripts
     }
 
+    # A data frame of all the processed data
     df = pd.DataFrame(processed_data, columns=['wav_filename', 'wav_filesize', 'transcript'])
+
+    # We write the data to the file. It is opened with "append" so that each component appends the previous one
     with open(FILENAME_ALL, 'a') as f:
+        # We only want to write the header the first time, hence the quick check "header = ..."
         df.to_csv(f, sep=',', mode='a', header=f.tell() == 0, index=False, encoding="ascii")
 
     print("Number of rejected files: " + str(rejected))
     print("Number of accepted files: " + str(accepted))
-    print("Accepted files:")
-    print(accepted_wavs)
+
+
+# This function generates the transcription for the given audio file
+def get_transcription(audio_file, directory_path):
+    # The current filename ends with .wav but we need it to be .skp
+    filename = audio_file.split(".")[0]
+    filename += ".skp"
+
+    # If the file does not exist, it means that it has not been extracted
+    if not path.exists(filename):
+        zipped_file = filename + ".gz"
+        zipped_path = path.join(directory_path, zipped_file)
+        # We open the zipped file and parse the tree from it
+        with gzip.open(zipped_path) as trans_file:
+            tree = ET.parse(trans_file)
+
+    # Otherwise the file is extracted and we can just parse instantly
+    else:
+        trans_path = path.join(directory_path, filename)
+        trans_file = open(trans_path, "r")
+        tree = ET.parse(trans_file)
+
+    root = tree.getroot()
+    transcription = ""
+
+    # All words are inside tags <tw .....> so we iterate over them
+    for tw in root.iter("tw"):
+        word = tw.get("w")
+        transcription += word + " "
+
+    # Strip the last character which is an unnecessary space
+    transcription = transcription[:-1]
+
+    # Return the complete transcription
+    return transcription
 
 
 if __name__ == "__main__":
@@ -133,6 +175,10 @@ if __name__ == "__main__":
     parser.add_argument("--component", help="restrict the used data to a specified component")
     parser.add_argument("--language", help="choose a single language for the model")
     args = parser.parse_args()
+
+    # Getting rid of the previous CSV file if it exists
+    if os.path.exists(FILENAME_ALL):
+        os.remove(FILENAME_ALL)
 
     preprocess_data(args)
 
