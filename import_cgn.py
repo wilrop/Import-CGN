@@ -136,9 +136,10 @@ def get_transcription(audio_file, directory_path):
     # The current filename ends with .wav but we need it to be .skp
     filename = audio_file.split(".")[0]
     filename += ".skp"
+    trans_path = path.join(directory_path, filename)
 
     # If the file does not exist, it means that it has not been extracted
-    if not path.exists(filename):
+    if not path.exists(trans_path):
         zipped_file = filename + ".gz"
         zipped_path = path.join(directory_path, zipped_file)
         # We open the zipped file and parse the tree from it
@@ -147,7 +148,6 @@ def get_transcription(audio_file, directory_path):
 
     # Otherwise the file is extracted and we can just parse instantly
     else:
-        trans_path = path.join(directory_path, filename)
         trans_file = open(trans_path, "r")
         tree = ET.parse(trans_file)
 
