@@ -10,6 +10,7 @@ import gzip          # This is used to extract the transcriptions if they are st
 
 # Global variable specifying the maximum accepted length of a speech file
 MAX_SECS = 10
+MIN_SECS = 1
 FILENAME_ALL = "all_data.csv"
 
 
@@ -103,7 +104,9 @@ def process_language(audio_path, trans_path):
         sample_rate = speech.samplerate
         seconds = samples/sample_rate
 
-        if seconds > MAX_SECS:
+        if "(" not in file:  # The original file is still there but we only want to account for files that are split
+            continue
+        elif seconds > MAX_SECS or seconds < MIN_SECS:
             rejected += 1
         else:
             accepted +=1
