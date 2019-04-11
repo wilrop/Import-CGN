@@ -53,9 +53,9 @@ def split_file(audio_dir, trans_dir, filename):
     # If the file does not exist, it means that it has not been extracted
     if not path.exists(trans_path):
         zipped_file = filename + ".gz"
-        zipped_path = path.join(trans_dir, zipped_file)
+        trans_path = path.join(trans_dir, zipped_file)
         # We open the zipped file and parse the tree from it
-        with gzip.open(zipped_path) as trans_file:
+        with gzip.open(trans_path) as trans_file:
             tree = ET.parse(trans_file)
 
     # Otherwise the file is extracted and we can just parse instantly
@@ -85,6 +85,14 @@ def split_file(audio_dir, trans_dir, filename):
         split_audio(audio_dir, name, i, begin, end)
 
         i += 1  # update the counter
+
+    # Remove the original files to save space
+    if os.path.exists(trans_path):
+        os.remove(trans_path)
+    audio_name = name + ".wav"
+    audio_path = path.join(audio_dir, audio_name)
+    if os.path.exists(audio_path):
+        os.remove(audio_path)
 
 
 # This definition will split an audio file and save it under a new name
