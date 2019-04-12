@@ -65,26 +65,52 @@ def split_file(audio_dir, trans_dir, filename):
         tree = ET.parse(trans_file)
 
     root = tree.getroot()
+
     i = 0  # A counter
+    sentences = 0  # We take 2 sentences at a time and I use this to keep track of the amount of sentences seen
+    xml_string = ""  # We construct the XML string, two sentences at a time
+    begin = 0
+    end = 0
 
     # This for loop will iterate over all the "tau" segments (more or less equal to a sentence each)
     for tau in root.iter("tau"):
-        begin = float(tau.get("tb"))  # The begin of the segment
-        end = float(tau.get("te"))
+        seg_begin = float(tau.get("tb"))  # The begin of the segment
+        seg_end = float(tau.get("te"))
 
+        if sentences == 1:
+            end = seg_end
+
+            # Construct a new file with the given counter
+            new_file = name + "(" + str(i) + ")" + ".skp"
+            new_trans_path = path.join(trans_dir, new_file)
+            f = open(new_trans_path, "wb+")
+
+            # Write the file
+            xml_string = xml_string + ET.tostring(tau)
+            f.write(xml_string)
+
+            # Split the audio file at the given timestamps
+            split_audio(audio_dir, name, i, begin, end)
+            sentences = 0
+            i += 1  # update the counter
+        else:
+            begin = seg_begin
+            end = seg_end
+            xml_string = ET.tostring(tau)
+            sentences = 1
+
+    # Check if we still have a left over sentence after iterating over them
+    if xml_string != "":
         # Construct a new file with the given counter
         new_file = name + "(" + str(i) + ")" + ".skp"
         new_trans_path = path.join(trans_dir, new_file)
         f = open(new_trans_path, "wb+")
 
         # Write the file
-        xml_string = ET.tostring(tau)
         f.write(xml_string)
 
         # Split the audio file at the given timestamps
         split_audio(audio_dir, name, i, begin, end)
-
-        i += 1  # update the counter
 
     # Remove the original files to save space
     if os.path.exists(trans_path):
