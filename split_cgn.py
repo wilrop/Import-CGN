@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 from pydub import AudioSegment
 
 
+ERROR_FILE = "failed_files.txt"
+
 # The definition that gets called with the target from main
 def split_files(target):
     # Check to see if we get a correct path
@@ -71,6 +73,17 @@ def split_file(audio_dir, trans_dir, filename):
     xml_string = ""  # We construct the XML string, two sentences at a time
     begin = 0
     end = 0
+
+    # A quick check to see if the file can actually be split up, because some of the files use a non-compatible codec
+    audio_name = name + ".wav"
+    audio_path = path.join(audio_dir, audio_name)
+    try:
+        AudioSegment.from_wav(audio_path)
+    except:
+        with open(ERROR_FILE, "a") as error_file:
+            error_file.write(audio_path)
+        return 0
+
 
     # This for loop will iterate over all the "tau" segments (more or less equal to a sentence each)
     for tau in root.iter("tau"):
