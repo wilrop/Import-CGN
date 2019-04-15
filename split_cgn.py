@@ -7,6 +7,8 @@ from pydub import AudioSegment
 
 
 ERROR_FILE = "failed_files.txt"
+DURATION = 4
+
 
 # The definition that gets called with the target from main
 def split_files(target):
@@ -69,7 +71,6 @@ def split_file(audio_dir, trans_dir, filename):
     root = tree.getroot()
 
     i = 0  # A counter
-    sentences = 0  # We take 2 sentences at a time and I use this to keep track of the amount of sentences seen
     xml_string = ""  # We construct the XML string, two sentences at a time
     begin = 0
     end = 0
@@ -84,40 +85,46 @@ def split_file(audio_dir, trans_dir, filename):
             error_file.write(audio_path)
         return 0
 
-
     # This for loop will iterate over all the "tau" segments (more or less equal to a sentence each)
     for tau in root.iter("tau"):
         seg_begin = float(tau.get("tb"))  # The begin of the segment
         seg_end = float(tau.get("te"))
 
-        if sentences == 1:
-            end = seg_end
+        # If we start at a new segment we have to reset the beginning. Once finished with a segment we set end back to 0
+        if end == 0:
+            begin = seg_begin
 
+        # Set a new end and calculate the duration
+        end = seg_end
+        duration = end - begin
+
+        # Append the xml string
+        xml_string = xml_string + ET.tostring(tau).decode("utf-8")  # Apparently tostring does not return a string...
+
+        # If the duration is long enough we will split it up
+        if duration >= DURATION:
             # Construct a new file with the given counter
             new_file = name + "(" + str(i) + ")" + ".skp"
             new_trans_path = path.join(trans_dir, new_file)
-            f = open(new_trans_path, "wb+")
+            f = open(new_trans_path, "w+")
 
             # Write the file
-            xml_string = xml_string + ET.tostring(tau)
             f.write(xml_string)
 
             # Split the audio file at the given timestamps
             split_audio(audio_dir, name, i, begin, end)
-            sentences = 0
+
+            # Reset the end and the xml_string
+            xml_string = ""
+            end = 0
             i += 1  # update the counter
-        else:
-            begin = seg_begin
-            end = seg_end
-            xml_string = ET.tostring(tau)
-            sentences = 1
 
     # Check if we still have a left over sentence after iterating over them
     if xml_string != "":
         # Construct a new file with the given counter
         new_file = name + "(" + str(i) + ")" + ".skp"
         new_trans_path = path.join(trans_dir, new_file)
-        f = open(new_trans_path, "wb+")
+        f = open(new_trans_path, "w+")
 
         # Write the file
         f.write(xml_string)
