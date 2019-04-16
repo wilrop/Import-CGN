@@ -128,6 +128,7 @@ def split_file(audio_dir, trans_dir, filename):
         f = open(new_trans_path, "w+")
 
         # Write the file
+        xml_string = "<transcription>" + xml_string + "</transcription>"
         f.write(xml_string)
 
         # Split the audio file at the given timestamps
