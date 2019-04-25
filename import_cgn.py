@@ -180,8 +180,8 @@ def get_transcription(audio_file, directory_path):
         word = tw.get("w")
         transcription += word + " "
 
-    # Strip the last character which is an unnecessary space
-    transcription = transcription[:-1]
+    # Strip the last character which is an unnecessary space and make it all lowercase.
+    transcription = transcription[:-1].lower()
 
     # Return the complete transcription
     return transcription
