@@ -191,7 +191,7 @@ def generate_splits(data):
     print("Generating splits for the data")
 
     # Randomize the order of the data
-    data.sample(frac=1)
+    data = data.sample(frac=1)
 
     # We split into 80-20 training and testing (using the global variable TRAIN_SPLIT)
     # Afterwards we split the 80% training data into 80-20 training validation
