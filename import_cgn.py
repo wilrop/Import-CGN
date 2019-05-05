@@ -10,7 +10,7 @@ import gzip          # This is used to extract the transcriptions if they are st
 
 # Global variable specifying the maximum and minimum accepted lengths of a speech file
 MAX_SECS = 10
-MIN_SECS = 1
+MIN_SECS = 3
 
 # The filenames for the splits
 FILENAME_TRAIN = "train_data.csv"
