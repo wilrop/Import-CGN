@@ -130,12 +130,16 @@ def process_language(audio_path, trans_path):
         elif seconds > MAX_SECS or seconds < MIN_SECS:
             rejected += 1
         else:
-            accepted += 1
-            accepted_wavs.append(final_path)
-            file_size = os.path.getsize(final_path)
-            accepted_wav_sizes.append(file_size)
             transcript = get_transcription(file, trans_path)  # The function returns the transcription for the .wav file
-            accepted_wav_transcripts.append(transcript)
+            if transcript == "":
+                rejected += 1
+            else:
+                accepted += 1
+                accepted_wavs.append(final_path)
+                file_size = os.path.getsize(final_path)
+                accepted_wav_sizes.append(file_size)
+
+                accepted_wav_transcripts.append(transcript)
 
     processed_data = {
         'wav_filename': accepted_wavs,
