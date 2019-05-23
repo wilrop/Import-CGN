@@ -20,6 +20,9 @@ FILENAME_TEST = "test_data.csv"
 # The percentage by which we split the training and testing sets
 TRAIN_SPLIT = 0.8
 
+# Forbidden characters that we do not want to have in our transcription
+CHARACTERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
 
 # This function will preprocess the data given a target (the top level directory of CGN)
 def preprocess_data(args):
@@ -131,7 +134,7 @@ def process_language(audio_path, trans_path):
             rejected += 1
         else:
             transcript = get_transcription(file, trans_path)  # The function returns the transcription for the .wav file
-            if transcript == "":
+            if not transcript or transcript == "":
                 rejected += 1
             else:
                 accepted += 1
@@ -182,6 +185,9 @@ def get_transcription(audio_file, directory_path):
     # All words are inside tags <tw .....> so we iterate over them
     for tw in root.iter("tw"):
         word = tw.get("w")
+        if word in CHARACTERS:
+            return False
+
         transcription += word + " "
 
     # Strip the last character which is an unnecessary space and make it all lowercase.
