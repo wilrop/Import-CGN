@@ -21,7 +21,7 @@ FILENAME_TEST = "test_data.csv"
 TRAIN_SPLIT = 0.8
 
 # Forbidden characters that we do not want to have in our transcription
-CHARACTERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+CHARACTERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
 
 # This function will preprocess the data given a target (the top level directory of CGN)
@@ -185,8 +185,11 @@ def get_transcription(audio_file, directory_path):
     # All words are inside tags <tw .....> so we iterate over them
     for tw in root.iter("tw"):
         word = tw.get("w")
-        if word in CHARACTERS:
-            return False
+        for letter in word:
+            print(letter)
+            if letter in CHARACTERS:
+                print("word: " + word)
+                return False
 
         transcription += word + " "
 
