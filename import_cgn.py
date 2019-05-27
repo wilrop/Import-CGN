@@ -186,9 +186,7 @@ def get_transcription(audio_file, directory_path):
     for tw in root.iter("tw"):
         word = tw.get("w")
         for letter in word:
-            print(letter)
             if letter in CHARACTERS:
-                print("word: " + word)
                 return False
 
         transcription += word + " "
