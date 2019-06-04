@@ -13,15 +13,16 @@ MAX_SECS = 10
 MIN_SECS = 3
 
 # The filenames for the splits
-FILENAME_TRAIN = "train_data.csv"
-FILENAME_DEV = "dev_data.csv"
-FILENAME_TEST = "test_data.csv"
+FILENAME_TRAIN = "train_data_strip.csv"
+FILENAME_DEV = "dev_data_strip.csv"
+FILENAME_TEST = "test_data_strip.csv"
 
 # The percentage by which we split the training and testing sets
 TRAIN_SPLIT = 0.8
 
 # Forbidden characters that we do not want to have in our transcription
 CHARACTERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+WORDS = ["ggg", "Xxx", "xxx"]
 
 
 # This function will preprocess the data given a target (the top level directory of CGN)
@@ -185,6 +186,8 @@ def get_transcription(audio_file, directory_path):
     # All words are inside tags <tw .....> so we iterate over them
     for tw in root.iter("tw"):
         word = tw.get("w")
+        if word in WORDS:
+            return False
         for letter in word:
             if letter in CHARACTERS:
                 return False
