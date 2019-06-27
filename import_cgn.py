@@ -49,14 +49,14 @@ def preprocess_data(args):
     if args.components:
         print("Components: " + str(args.components))
         for comp in args.components:
-            audio_path = path.join(audio_path, "comp-" + comp)
-            trans_path = path.join(trans_path, "comp-" + comp)
+            new_audio_path = path.join(audio_path, "comp-" + comp)
+            new_trans_path = path.join(trans_path, "comp-" + comp)
             if not path.isdir(audio_path):
                 print("The given component: " + comp + " could not be found")
             else:
                 print("---------------------------------------------------------")
                 print("Entering directory " + comp)
-                new_data = process_component(audio_path, trans_path)
+                new_data = process_component(new_audio_path, new_trans_path)
                 data = data.append(new_data)
                 print("---------------------------------------------------------")
     else:
