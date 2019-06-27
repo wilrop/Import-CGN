@@ -46,17 +46,19 @@ def preprocess_data(args):
     data = pd.DataFrame()
 
     # Check if the user chose a specific component
-    if args.component:
-        audio_path = path.join(audio_path, "comp-" + args.component)
-        trans_path = path.join(trans_path, "comp-" + args.component)
-        if not path.isdir(audio_path):
-            print("The given component could not be found")
-        else:
-            print("---------------------------------------------------------")
-            print("Only utilizing the specified component " + args.component)
-            new_data = process_component(audio_path, trans_path)
-            data = data.append(new_data)
-            print("---------------------------------------------------------")
+    if args.components:
+        print("Components: " + str(args.components))
+        for comp in args.components:
+            audio_path = path.join(audio_path, "comp-" + comp)
+            trans_path = path.join(trans_path, "comp-" + comp)
+            if not path.isdir(audio_path):
+                print("The given component: " + comp + " could not be found")
+            else:
+                print("---------------------------------------------------------")
+                print("Entering directory " + comp)
+                new_data = process_component(audio_path, trans_path)
+                data = data.append(new_data)
+                print("---------------------------------------------------------")
     else:
         print("Utilizing all available components")
         # Check everything at the given path. The subdirectories are the same for audio and trans
@@ -245,7 +247,7 @@ if __name__ == "__main__":
     # Starting the parser for the command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("target", help="the top level target directory")
-    parser.add_argument("--component", help="restrict the used data to a specified component")
+    parser.add_argument("--components", nargs='+', help="restrict the used data to a specified component")
     parser.add_argument("--language", help="choose a single language for the model")
     args = parser.parse_args()
 
