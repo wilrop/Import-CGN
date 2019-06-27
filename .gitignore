@@ -2,3 +2,4 @@ venv/
 .idea/
 *.csv
 ldc93s1/
+.DS_Store
