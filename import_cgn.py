@@ -114,15 +114,34 @@ def process_component(audio_path, trans_path):
 
 # This function processes one language each time it gets called
 def process_language(audio_path, trans_path):
-    files = os.listdir(audio_path)
+    files = sorted(os.listdir(audio_path))  # Needs to be sorted so that we can use the "previous" later.
     accepted = 0
     accepted_wavs = []
     accepted_wav_sizes = []
     accepted_wav_transcripts = []
     rejected = 0
 
+    previous_end = 0
+    possible_file = None
+    possible_filesize = 0
+    possible_transcript = ""
+
+    def maybe_add(possible_file, possible_filesize, possible_transcript):
+        if possible_transcript and possible_transcript != "":
+            print("File: " + possible_file + " and Transcript: " + str(possible_transcript))
+            # Import the previous file.
+            nonlocal accepted
+            accepted += 1
+            accepted_wavs.append(possible_file)
+            accepted_wav_sizes.append(possible_filesize)
+            accepted_wav_transcripts.append(possible_transcript)
+        else:
+            nonlocal rejected
+            rejected += 1
+
     # Check all speech files for validity
-    for file in files:
+    for idx, file in enumerate(files):
+        print(possible_file)
         final_path = path.join(audio_path, file)
 
         # Calculate the length of the speech file
@@ -134,18 +153,30 @@ def process_language(audio_path, trans_path):
         if "(" not in file:  # The original file is still there but we only want to account for files that are split
             continue
         elif seconds > MAX_SECS or seconds < MIN_SECS:
+            print("Too long Rejection: " + file)
             rejected += 1
         else:
-            transcript = get_transcription(file, trans_path)  # The function returns the transcription for the .wav file
-            if not transcript or transcript == "":
-                rejected += 1
+            # The function returns the timestamps and the transcription for the .wav file
+            begin, end, transcript = get_transcription(file, trans_path)
+            if possible_file is None:
+                pass
+            elif file.endswith("(000).skp"): # When we start processing a new "big" file.
+                maybe_add(possible_file, possible_filesize, possible_transcript)
+            elif previous_end <= begin < end:
+                maybe_add(possible_file, possible_filesize, possible_transcript)
+                if idx == len(files) - 1:
+                    # Also import the current file.
+                    maybe_add(file, os.path.getsize(final_path), transcript)
             else:
-                accepted += 1
-                accepted_wavs.append(final_path)
-                file_size = os.path.getsize(final_path)
-                accepted_wav_sizes.append(file_size)
+                print("Time Rejection: " + possible_file)
+                transcript = ""  # We do this so the file will also be rejected later on
+                rejected += 1
 
-                accepted_wav_transcripts.append(transcript)
+            # Set the current file as a possible candidate for importing.
+            possible_file = final_path
+            possible_filesize = os.path.getsize(final_path)
+            possible_transcript = transcript
+            previous_end = end
 
     processed_data = {
         'wav_filename': accepted_wavs,
@@ -183,16 +214,21 @@ def get_transcription(audio_file, directory_path):
         tree = ET.parse(trans_file)
 
     root = tree.getroot()
+    tau = root.find("tau")
+
+    # Get the beginning and ending already. Initialize the transcription.
+    begin = tau.get("tb")
+    end = tau.get("te")
     transcription = ""
 
     # All words are inside tags <tw .....> so we iterate over them
     for tw in root.iter("tw"):
         word = tw.get("w")
         if word in WORDS:
-            return False
+            return begin, end, False
         for letter in word:
             if letter in CHARACTERS:
-                return False
+                return begin, end, False
 
         transcription += word + " "
 
@@ -200,7 +236,11 @@ def get_transcription(audio_file, directory_path):
     transcription = transcription[:-1].lower()
 
     # Return the complete transcription
-    return transcription
+    return begin, end, transcription
+
+
+def check_previous(previous_end, begin, end):
+    return previous_end <= begin < end
 
 
 def generate_splits(data):
