@@ -9,6 +9,8 @@ from pydub import AudioSegment
 ERROR_FILE = "failed_files.txt"
 DURATION = 4
 
+WIDTH = 3  # The amount of padding we use. This padding is necessary for sorting in the import phase.
+
 
 # The definition that gets called with the target from main
 def split_files(target):
@@ -104,7 +106,7 @@ def split_file(audio_dir, trans_dir, filename):
         # If the duration is long enough we will split it up
         if duration >= DURATION:
             # Construct a new file with the given counter
-            new_file = name + "(" + str(i) + ")" + ".skp"
+            new_file = name + "(" + str(i).zfill(WIDTH) + ")" + ".skp"
             new_trans_path = path.join(trans_dir, new_file)
             f = open(new_trans_path, "w+")
 
@@ -123,7 +125,7 @@ def split_file(audio_dir, trans_dir, filename):
     # Check if we still have a left over sentence after iterating over them
     if xml_string != "":
         # Construct a new file with the given counter
-        new_file = name + "(" + str(i) + ")" + ".skp"
+        new_file = name + "(" + str(i).zfill(WIDTH) + ")" + ".skp"
         new_trans_path = path.join(trans_dir, new_file)
         f = open(new_trans_path, "w+")
 
@@ -156,7 +158,7 @@ def split_audio(audio_dir, name, i, begin, end):
     new_fragment = audio_file[begin:end]
 
     # Save the new file
-    new_name = name + "(" + str(i) + ")" + ".wav"
+    new_name = name + "(" + str(i).zfill(WIDTH) + ")" + ".wav"  # Use zfill to pad the index so we get 000 001 etc.
     new_audio_path = path.join(audio_dir, new_name)
     new_fragment.export(new_audio_path, format="wav")
 
