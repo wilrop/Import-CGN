@@ -137,11 +137,11 @@ def process_language(audio_path, trans_path):
             accepted_wav_transcripts.append(possible_transcript)
         else:
             nonlocal rejected
+            print("Transcript Rejection: " + possible_file)
             rejected += 1
 
     # Check all speech files for validity
     for idx, file in enumerate(files):
-        print(possible_file)
         final_path = path.join(audio_path, file)
 
         # Calculate the length of the speech file
@@ -160,7 +160,7 @@ def process_language(audio_path, trans_path):
             begin, end, transcript = get_transcription(file, trans_path)
             if possible_file is None:
                 pass
-            elif file.endswith("(000).skp"): # When we start processing a new "big" file.
+            elif file.endswith("(000).skp"):  # When we start processing a new "big" file.
                 maybe_add(possible_file, possible_filesize, possible_transcript)
             elif previous_end <= begin < end:
                 maybe_add(possible_file, possible_filesize, possible_transcript)
@@ -214,11 +214,16 @@ def get_transcription(audio_file, directory_path):
         tree = ET.parse(trans_file)
 
     root = tree.getroot()
+    # Get the beginning of the transcription.
     tau = root.find("tau")
+    begin = float(tau.get("tb"))
 
-    # Get the beginning and ending already. Initialize the transcription.
-    begin = tau.get("tb")
-    end = tau.get("te")
+    # Get the ending.
+    end = 0
+    for tau in root.iter("tau"):
+        end = float(tau.get("te"))
+
+    # Initialize the transcription.
     transcription = ""
 
     # All words are inside tags <tw .....> so we iterate over them
