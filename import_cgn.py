@@ -215,13 +215,22 @@ def get_transcription(audio_file, directory_path):
 
     root = tree.getroot()
     # Get the beginning of the transcription.
+    overlapping = False
     tau = root.find("tau")
     begin = float(tau.get("tb"))
 
     # Get the ending.
     end = 0
     for tau in root.iter("tau"):
-        end = float(tau.get("te"))
+        curr_begin = float(tau.get("tb"))
+        curr_end = float(tau.get("te"))
+
+        if not end <= curr_begin < curr_end:
+            overlapping = True
+        end = curr_end
+
+    if overlapping:
+        return begin, end, ""
 
     # Initialize the transcription.
     transcription = ""
