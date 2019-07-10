@@ -166,7 +166,7 @@ def process_language(audio_path, trans_path):
                 maybe_add(possible_file, possible_filesize, possible_transcript)
                 if idx == len(files) - 1:
                     # Also import the current file.
-                    maybe_add(file, os.path.getsize(final_path), transcript)
+                    maybe_add(final_path, os.path.getsize(final_path), transcript)
             else:
                 print("Time Rejection: " + possible_file)
                 transcript = ""  # We do this so the file will also be rejected later on
