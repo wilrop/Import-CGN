@@ -6,7 +6,7 @@ from os import path
 def clean(args):
     file = args.file
     df = pd.read_csv(file)
-    print("There are " + len(df) + " in the original file")
+    print("There are " + str(len(df)) + " in the original file")
 
     # Deleting rows where the transcript contains the character &
     df = df[df['transcript'].find("&") == -1]
@@ -14,7 +14,7 @@ def clean(args):
     for index, row in df.iterrows():
         row['transcript'].replace("-", " ")
 
-    print("There are " + len(df) + " in the cleaned file")
+    print("There are " + str(len(df)) + " in the cleaned file")
 
     # We write the cleaned file
     print("Writing cleaned file")
