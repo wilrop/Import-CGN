@@ -8,11 +8,11 @@ def clean(args):
     df = pd.read_csv(file)
     print("There are " + str(len(df)) + " in the original file")
 
-    # Deleting rows where the transcript contains the character &
-    df = df[df['transcript'].find("&") == -1]
-
+    # Iterate over all rows in the dataframe
     for index, row in df.iterrows():
-        row['transcript'].replace("-", " ")
+        row['transcript'].replace("-", " ")  # Replace - by a space
+        if row['transcript'].find('&') == -1:  # Drop all rows containing a &
+            df.drop(index, inplace=True)
 
     print("There are " + str(len(df)) + " in the cleaned file")
 
