@@ -3,3 +3,4 @@ venv/
 *.csv
 ldc93s1/
 .DS_Store
+.vscode/
